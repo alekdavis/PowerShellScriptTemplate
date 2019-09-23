@@ -9,7 +9,7 @@ This repository contains three files:
 - `Skeleton.ps1.StreamLogging.json` is a sample configuration file used by the [StreamLogging module](https://github.com/alekdavis/StreamLogging).
 
 ## Dependencies
-The `Skeleton.ps1` script depends on the following modules:
+The `Skeleton.ps1` script depends on the following modules (all available at [PowerShell gallery](https://PowerShellGallery.com/)):
 
 - __[ScriptVersion](https://github.com/alekdavis/ScriptVersion)__ allows you to easily manage script versions.
 - __[ConfigFile](https://github.com/alekdavis/ConfigFile)__ lets you read script parameters and variables form a configuration file.
