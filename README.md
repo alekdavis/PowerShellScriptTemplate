@@ -11,9 +11,9 @@ This repository contains three files:
 ## Dependencies
 The `Skeleton.ps1` script depends on the following modules:
 
-- `[ScriptVersion](https://github.com/alekdavis/ScriptVersion)` allows you to easily manage script versions.
-- `[ConfigFile](https://github.com/alekdavis/ConfigFile)` lets you read script parameters and variables form a configuration file.
-- `[StreamLogging](https://github.com/alekdavis/StreamLogging)` makes it easy to log messages to the console and/or a text file.
+- __[ScriptVersion](https://github.com/alekdavis/ScriptVersion)__ allows you to easily manage script versions.
+- __[ConfigFile](https://github.com/alekdavis/ConfigFile)__ lets you read script parameters and variables form a configuration file.
+- __[StreamLogging](https://github.com/alekdavis/StreamLogging)__ makes it easy to log messages to the console and/or a text file.
 
 ## Description
 The `Skeleton.ps1` defines the script structure, common functions that cannot be implemented in PowerShell modules, and illustrates how to:
