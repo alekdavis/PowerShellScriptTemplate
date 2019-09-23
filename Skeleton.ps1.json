@@ -1,0 +1,34 @@
+{
+    "_meta": {
+        "version": "1.0",
+        "strict": false,
+        "description": "Sample run-time settings of the Skeleton.ps1 script."
+    },
+    "ModulePath": {
+        "_meta": {
+            "description": "Local module paths used by the script session.",
+            "default": "$PSScriptRoot\\Modules"
+        },
+        "value": null
+    },
+    "LoggingConfigFile": {
+        "_meta": {
+            "description": "Path or extension pointing to the configuration file used by the StreamLogging module."
+        },
+        "value": null
+    },
+    "Quiet": {
+        "_meta": {
+            "description": "When set, log messages sent to the console will be suppressed."
+        },
+        "value": null,
+        "hasValue": false
+    },
+    "NoLogo": {
+        "_meta": {
+            "description": "When set, script version information will be suppressed."
+        },
+        "value": null,
+        "hasValue": false
+    }
+}
