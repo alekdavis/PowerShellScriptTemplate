@@ -23,7 +23,7 @@ The `Skeleton.ps1` defines the script structure, common functions that cannot be
 - Configure and use the [StreamLogging module](https://github.com/alekdavis/StreamLogging) to print log messages to the console and/or text files.
 - Install (if needed) and load PowerShell modules.
 - Use local modules (in case the script runs on a system not connected to the Internet or for some reason cannot download modules from the [PowerShell gallery](https://PowerShellGallery.com/).
-- Pring command line parameters.
+- Print command line parameters.
 - Handle unexpected exceptions.
 - Calculate script run time.
 
