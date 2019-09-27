@@ -146,7 +146,8 @@ $Modules = @("ScriptVersion", "ConfigFile", "StreamLogging")
 #------------------------------[ EXIT CODES]-------------------------------
 
 # TODO: DEFINE EXIT CODES (IF NEEDED).
-$EXITCODE_ERROR = 1
+# $EXITCODE_SUCCESS = 0
+# $EXITCODE_ERROR   = 1
 
 #--------------------------[ STANDARD FUNCTIONS ]--------------------------
 
