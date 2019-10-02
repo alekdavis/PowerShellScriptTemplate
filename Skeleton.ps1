@@ -43,9 +43,9 @@ Use this switch to suppress log entries sent to the console.
 Specify this command-line switch to not print version and copyright info.
 
 .NOTES
-Version    : 1.0.0
+Version    : 1.0.1
 Author     : Alek Davis
-Created on : 2019-09-23
+Created on : 2019-10-02
 License    : MIT License
 LicenseLink: https://github.com/alekdavis/PowerShellScriptTemplate/blob/master/LICENSE
 Copyright  : (c) 2019 Alek Davis
@@ -157,6 +157,7 @@ $Modules = @("ScriptVersion", "ConfigFile", "StreamLogging")
 # SetModulePath
 #   Adds custom folders to the module path.
 function SetModulePath {
+    [CmdletBinding()]
     param(
         [string]
         $modulePath
@@ -185,6 +186,7 @@ function SetModulePath {
 # LoadModule
 #   Installs (if needed) and loads a PowerShell module.
 function LoadModules {
+    [CmdletBinding()]
     param(
         [string[]]
         $modules
@@ -225,6 +227,7 @@ function LoadModules {
 # GetScriptVersion
 #   Returns script version info.
 function GetScriptVersion {
+    [CmdletBinding()]
     param (
     )
 
@@ -240,6 +243,7 @@ function GetScriptVersion {
 # GetCommandLineArgs
 #   Returns command-line arguments as a string.
 function GetCommandLineArgs {
+    [CmdletBinding()]
     param (
     )
 
@@ -263,6 +267,7 @@ function GetCommandLineArgs {
 # StartLogging
 #   Initializes log settings.
 function StartLogging {
+    [CmdletBinding()]
     param(
         [string]
         $configFile,
@@ -296,6 +301,7 @@ function StartLogging {
 # StopLogging
 #   Clears logging resources.
 function StopLogging {
+    [CmdletBinding()]
     param(
     )
 
@@ -313,6 +319,7 @@ function StopLogging {
 #   Loads settings from config file (if any) into the script parameters and
 #   variables.
 function InitConfigFile {
+    [CmdletBinding()]
     param(
         [string]
         $configFile,
@@ -335,6 +342,7 @@ function InitConfigFile {
 # PreMain
 #   Performs common action before the main execution logic.
 function PreMain {
+    [CmdletBinding()]
     param(
         [datetime]
         $startTime
@@ -374,6 +382,7 @@ function PreMain {
 # PostMain
 #   Performs common action after the main execution logic.
 function PostMain {
+    [CmdletBinding()]
     param(
         [datetime]
         $startTime,
@@ -407,6 +416,7 @@ function PostMain {
 # Init
 #   Initializes global variables.
 function Init {
+    [CmdletBinding()]
     param(
     )
 
@@ -417,6 +427,7 @@ function Init {
 # Main
 #   Implements the primary script logic.
 function Main {
+    [CmdletBinding()]
     param(
     )
 
@@ -436,12 +447,12 @@ function Main {
             }
             catch {
                 # Log messages from the error objects.
-                "LOG EXCEPTION (MESSAGES):"
+                "LOG EXCEPTION (MESSAGES ONLY):"
                 Write-LogException
                 Write-Log -LogLevel Error
                 Write-Log -LogLevel Error -Errors $Error
 
-                "LOG EXCEPTION + MESSAGE (MESSAGES):"
+                "LOG EXCEPTION + MESSAGE (MESSAGES ONLY):"
                 "Hello, exception!" | Write-Log -LogLevel Error
                 Write-Log "Hello, exception!" -LogLevel Error
             }
@@ -495,6 +506,33 @@ function Main {
         "Hello, debug!" | Write-LogDebug
         Write-Log -LogLevel Debug "Hello, debug!"
         "Hello, debug!" | Write-Log -LogLevel Debug
+
+        $object = @{
+            "Key1" = "Value1"
+            "Key2" = "Value2"
+        }
+
+        "LOG ERROR OBJECT:"
+        Write-LogError -Object $object
+        Write-Log -LogLevel Error -Object $object
+
+        "LOG WARNING OBJECT (COMPRESS):"
+        Write-LogWarning -Object $object -Compress
+        Write-Log -LogLevel Warning -Object $object -Compress
+
+        "LOG INFO OBJECT + MESSAGE (COMPRESS):"
+        Write-LogInfo "Hello, object:" -Object $object -Compress
+        "Hello, object:" | Write-LogInfo -Object $object -Compress
+        Write-Log -LogLevel Info "Hello, object:" -Object $object -Compress
+        Write-Log "Hello, object:" -Object $object -Compress
+        "Hello, object:" | Write-Log -LogLevel Info -Object $object -Compress
+        "Hello, object:" | Write-Log -Object $object -Compress
+
+        "LOG DEBUG OBJECT + MESSAGE (COMPRESS):"
+        Write-LogDebug "Hello, object:" -Object $object -Compress
+        "Hello, object:" | Write-LogDebug -Object $object -Compress
+        Write-Log -LogLevel Debug "Hello, object:" -Object $object -Compress
+        "Hello, object:" | Write-Log -LogLevel Debug -Object $object -Compress
     }
     catch {
         Write-LogInfo "Error in the main script logic."
