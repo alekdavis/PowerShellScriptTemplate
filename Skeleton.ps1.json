@@ -4,13 +4,6 @@
         "strict": false,
         "description": "Sample run-time settings of the Skeleton.ps1 script."
     },
-    "ModulePath": {
-        "_meta": {
-            "description": "Local module paths used by the script session.",
-            "default": "$PSScriptRoot\\Modules"
-        },
-        "value": null
-    },
     "LoggingConfigFile": {
         "_meta": {
             "description": "Path or extension pointing to the configuration file used by the StreamLogging module."
