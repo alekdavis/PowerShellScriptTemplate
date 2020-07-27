@@ -408,7 +408,7 @@ function PostMain {
     }
 }
 
-#--------------------------[ STANDARD FUNCTIONS ]--------------------------
+#---------------------------[ CUSTOM FUNCTIONS ]---------------------------
 
 # TODO: IMPLEMENT THE FOLLOWING FUNCTIONS AND ADD YOUR OWN IF NEEDED.
 
