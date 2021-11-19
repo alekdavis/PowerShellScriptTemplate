@@ -43,7 +43,7 @@ Use this switch to suppress log entries sent to the console.
 Specify this command-line switch to not print version and copyright info.
 
 .NOTES
-Version    : 1.1.0
+Version    : 1.1.1
 Author     : Alek Davis
 Created on : 2021-11-19
 License    : MIT License
@@ -775,7 +775,7 @@ $Error.Clear()
 SetModulePath $ModulePath
 
 # Load module dependencies.
-LoadModules $Modules
+LoadModules $MODULES
 
 # Load settings from a config file, if needed (this cannot be called from a function).
 try {
