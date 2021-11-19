@@ -43,12 +43,12 @@ Use this switch to suppress log entries sent to the console.
 Specify this command-line switch to not print version and copyright info.
 
 .NOTES
-Version    : 1.0.1
+Version    : 1.1.0
 Author     : Alek Davis
-Created on : 2019-10-02
+Created on : 2021-11-19
 License    : MIT License
 LicenseLink: https://github.com/alekdavis/PowerShellScriptTemplate/blob/master/LICENSE
-Copyright  : (c) 2019 Alek Davis
+Copyright  : (c) 2021 Alek Davis
 
 .LINK
 https://github.com/alekdavis/PowerShellScriptTemplate
@@ -129,7 +129,15 @@ param (
 # Module implementing logging to file and console routines:
 # https://www.powershellgallery.com/packages/StreamLogging
 
-$Modules = @("ScriptVersion", "ConfigFile", "StreamLogging")
+$MODULE_ScriptVersion   = "ScriptVersion"
+$MODULE_ConfigFile      = "ConfigFile"
+$MODULE_StreamLogging   = "StreamLogging|1.2.1"
+
+$MODULES = @(
+    $MODULE_ScriptVersion,
+    $MODULE_ConfigFile,
+    $MODULE_StreamLogging
+)
 
 #------------------------[ CONFIGURABLE VARIABLES ]------------------------
 
@@ -159,9 +167,9 @@ $Modules = @("ScriptVersion", "ConfigFile", "StreamLogging")
 function SetModulePath {
     [CmdletBinding()]
     param(
-        [string]
         $modulePath
     )
+    Write-Verbose "Entered SetModulePath."
 
     if ($modulePath) {
         if ($env:PSModulePath -notmatch ";$") {
@@ -180,46 +188,275 @@ function SetModulePath {
             }
         }
     }
+
+    Write-Verbose "Exiting SetModulePath."
 }
 
 #--------------------------------------------------------------------------
-# LoadModule
-#   Installs (if needed) and loads a PowerShell module.
+# GetModuleVersion
+#   Returns version string for the specified module using format:
+#   major.minor.build.
+function GetModuleVersion {
+    [CmdletBinding()]
+    param(
+        [PSModuleInfo]
+        $moduleInfo
+    )
+
+    $major = $moduleInfo.Version.Major
+    $minor = $moduleInfo.Version.Minor
+    $build = $moduleInfo.Version.Build
+
+    return "$major.$minor.$build"
+}
+
+#--------------------------------------------------------------------------
+# GetVersionParts
+#   Converts version string into three parts: major, minor, and build.
+function GetVersionParts {
+    [CmdletBinding()]
+    param(
+        [string]
+        $version
+    )
+
+    $versionParts = $version.Split(".")
+
+    $major = $versionParts[0]
+    $minor = 0
+    $build = 0
+
+    if ($versionParts.Count -gt 1) {
+        $minor = $versionParts[1]
+    }
+
+    if ($versionParts.Count -gt 2) {
+        $build = $versionParts[2]
+    }
+
+    return $major, $minor, $build
+}
+
+#--------------------------------------------------------------------------
+# CompareVersions
+#   Compares two major, minor, and build parts of two version strings and
+#   returns 0 is they are the same, -1 if source version is older, or 1
+# if source version is newer than target version.
+function CompareVersions {
+    [CmdletBinding()]
+    param(
+        [string]
+        $sourceVersion,
+
+        [string]
+        $targetVersion
+    )
+
+    if ($sourceVersion -eq $targetVersion) {
+        return 0
+    }
+
+    $sourceMajor, $sourceMinor, $sourceBuild = GetVersionParts $sourceVersion
+    $targetMajor, $targetMinor, $targetBuild = GetVersionParts $targetVersion
+
+    $source = @($sourceMajor, $sourceMinor, $sourceBuild)
+    $target = @($targetMajor, $targetMinor, $targetBuild)
+
+    for ($i = 0; $i -lt $source.Count; $i++) {
+        $diff = $source[$i] - $target[$i]
+
+        if ($diff -ne 0) {
+            if ($diff -lt 0) {
+                return -1
+            }
+
+            return 1
+        }
+    }
+
+    return 0
+}
+
+#--------------------------------------------------------------------------
+# IsSupportedVersion
+#   Checks whether the specified version is within the min-max range.
+function IsSupportedVersion {
+    [CmdletBinding()]
+    param(
+        [string]
+        $version,
+
+        [string]
+        $minVersion,
+
+        [string]
+        $maxVersion
+    )
+
+    if (!($minVersion) -and (!($maxVersion))) {
+        return $true
+    }
+
+    if (($version -and $minVersion -and $maxVersion) -and
+        ($minVersion -eq $maxVersion) -and
+        ($version -eq $minVersion)) {
+        return 0
+    }
+
+    if ($minVersion) {
+        if ((CompareVersions $version $minVersion) -lt 0) {
+            return $false
+        }
+    }
+
+    if ($maxVersion) {
+        if ((CompareVersions $version $maxVersion) -gt 0) {
+            return $false
+        }
+    }
+
+    return $true
+}
+
+#--------------------------------------------------------------------------
+# LoadModules
+#   Installs (if needed) and loads the specified PowerShell modules.
 function LoadModules {
     [CmdletBinding()]
     param(
         [string[]]
         $modules
     )
+    Write-Verbose "Entered LoadModules."
 
-    # Make sure we got the modules.
+     # Make sure we got the modules.
     if (!($modules) -or ($modules.Count -eq 0)) {
         return
     }
 
+    $module = ""
+    $cmdArgs = @{}
+
     try {
         foreach ($module in $modules) {
-            # If module is not loaded into the process.
-            if (!(Get-Module -Name $module)) {
+            Write-Verbose "Processing module '$module'."
 
-                # Check if module is locally available.
-                if (!(Get-Module -Listavailable -Name $module)) {
+            $moduleInfo = $module.Split("|:")
 
-                    # Download module if needed.
-                    Write-Verbose "Installing module '$module'."
-                    Install-Module -Name $module `
-                        -Force -Scope CurrentUser -ErrorAction Stop
+            $moduleName         = $moduleInfo[0]
+            $moduleVersion      = ""
+            $moduleMinVersion   = ""
+            $moduleMaxVersion   = ""
+            $cmdArgs.Clear()
+
+            if ($moduleInfo.Count -gt 1) {
+                $moduleMinVersion = $moduleInfo[1]
+
+                if ($moduleMinVersion) {
+                    $cmdArgs["MinimumVersion"] = $moduleMinVersion
                 }
             }
 
+            if ($moduleInfo.Count -gt 2) {
+                $moduleMaxVersion = $moduleInfo[2]
+
+                if ($moduleMaxVersion) {
+                    $cmdArgs["MaximumVersion"] = $moduleMaxVersion
+                }
+            }
+
+            Write-Verbose "Required module name: '$moduleName'."
+
+            if ($moduleMinVersion) {
+                Write-Verbose "Required module min version: '$moduleMinVersion'."
+            }
+
+            if ($moduleMaxVersion) {
+                Write-Verbose "Required module max version: '$moduleMaxVersion'."
+            }
+
+            # Check if module is loaded into the process.
+            $loadedModules = Get-Module -Name $moduleName
+
+            $isLoaded       = $false
+            $isInstalled    = $false
+
+            if ($loadedModules) {
+                Write-Verbose "Module '$moduleName' is loaded."
+
+                # If version check is required, compare versions.
+                if ($moduleMinVersion -or $moduleMaxVersion) {
+
+                    foreach ($loadedModule in $loadedModules) {
+                        $moduleVersion = GetModuleVersion $loadedModule
+
+                        Write-Verbose "Checking if loaded module '$moduleName' version '$moduleVersion' is supported."
+
+                        if (IsSupportedVersion $moduleVersion $moduleMinVersion $moduleMaxVersion) {
+                            Write-Verbose "Loaded module '$moduleName' version '$moduleVersion' is supported."
+                            $isLoaded       = $true
+                            $isInstalled    = $true
+                            break
+                        }
+                        else {
+                            Write-Verbose "Loaded module '$moduleName' version '$moduleVersion' is not supported."
+                        }
+                    }
+                }
+                else {
+                    $isLoaded       = $true
+                    $isInstalled    = $true
+                }
+            }
+
+            # If module is not loaded or version is wrong.
+            if (!$isLoaded) {
+                Write-Verbose "Required module '$moduleName' is not loaded."
+
+                # Check if module is locally available.
+                $installedModules = Get-Module -ListAvailable -Name $moduleName
+
+                $isInstalled = $false
+
+                # If module is found, validate the version.
+                if ($installedModules) {
+                    foreach ($installedModule in $installedModules) {
+                        $installedModuleVersion = GetModuleVersion $installedModule
+                        Write-Verbose "Found installed '$moduleName' module version '$installedModuleVersion'."
+
+                        if (IsSupportedVersion $installedModuleVersion $moduleMinVersion $moduleMaxVersion) {
+
+                            Write-Verbose "Module '$moduleName' version '$moduleVersion' is supported."
+                            $isInstalled = $true
+                            break
+                        }
+
+                        Write-Verbose "Module '$moduleName' version '$moduleVersion' is not supported."
+                        Write-Verbose "Supported module '$moduleName' versions are: '$moduleMinVersion'-'$moduleMaxVersion'."
+                    }
+                }
+            }
+
+            if (!$isInstalled) {
+
+                # Download module if needed.
+                Write-Verbose "Installing module '$moduleName'."
+                Install-Module -Name $moduleName @cmdArgs -Force -Scope CurrentUser -ErrorAction Stop
+            }
+
             #  Import module into the process.
-            Write-Verbose "Importing module '$module'."
-            Import-Module $module -ErrorAction Stop -Force
+            Write-Verbose "Importing module '$moduleName'."
+            Import-Module $moduleName -ErrorAction Stop -Force @cmdArgs
+            Write-Verbose "Imported module '$moduleName'."
+
         }
     }
     catch {
-        "Cannot load modules."
-        throw
+        $errMsg = "Cannot load module '$module'."
+        throw (New-Object System.Exception($errMsg, $_.Exception))
+    }
+    finally {
+        Write-Verbose "Exiting LoadModules."
     }
 }
 
@@ -305,38 +542,21 @@ function StopLogging {
     param(
     )
 
-    try {
-        Stop-Logging
-    }
-    catch {
-        "Cannot stop logging."
-        throw
+    if (Get-Module -Name $MODULE_StreamLogging) {
+        if (Test-LoggingStarted) {
+            try {
+                Write-Verbose "Uninitializing logging."
+                Stop-Logging
+            }
+            catch {
+                Write-Error "Cannot stop logging."
+                $_
+
+                $Error.Clear()
+            }
+        }
     }
 }
-
-#--------------------------------------------------------------------------
-# InitConfigFile
-#   Loads settings from config file (if any) into the script parameters and
-#   variables.
-function InitConfigFile {
-    [CmdletBinding()]
-    param(
-        [string]
-        $configFile,
-
-        [Hashtable]
-        $DefaultParameters
-    )
-    try {
-        Import-ConfigFile -ConfigFilePath $ConfigFile `
-            -DefaultParameters $PSBoundParameters
-    }
-    catch {
-        "Cannot initialize run-time settings from a configuration file."
-        throw
-    }
-}
-
 
 #--------------------------------------------------------------------------
 # PreMain
@@ -557,8 +777,14 @@ SetModulePath $ModulePath
 # Load module dependencies.
 LoadModules $Modules
 
-# Load settings from a config file (if any).
-InitConfigFile -ConfigFile $ConfigFile -DefaultParameters $PSBoundParameters
+# Load settings from a config file, if needed (this cannot be called from a function).
+try {
+    Import-ConfigFile -ConfigFilePath $ConfigFile -DefaultParameters $PSBoundParameters
+}
+catch {
+    "Cannot initialize run-time settings from a configuration file."
+    throw
+}
 
 # Initialize globals.
 Init
